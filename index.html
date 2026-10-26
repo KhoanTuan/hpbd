@@ -1052,9 +1052,9 @@ function gatherLetters(input, r) {
   row.style.transform = `translateX(${-input.scrollLeft}px)`;
   [...input.value].forEach(ch => { const s = document.createElement("span"); s.textContent = ch; row.appendChild(s); });
   box.appendChild(row); document.body.appendChild(box);
-  const spans = [...row.children], first = spans[0].getBoundingClientRect(), lastR = spans[spans.length - 1].getBoundingClientRect();
-  const bl = r.left + padL, br = r.right - padR;
-  const pt = { x: Math.min(br, Math.max(bl, (Math.max(bl, first.left) + Math.min(br, lastR.right)) / 2)), y: r.top + r.height / 2 };
+  const spans = [...row.children];
+  // the letters meet at the middle of the input, where the star has always risen from
+  const pt = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   const moves = spans.map(s => { const b = s.getBoundingClientRect(); return [pt.x - (b.left + b.width / 2), pt.y - (b.top + b.height / 2)]; });
   requestAnimationFrame(() => requestAnimationFrame(() => {
     box.classList.add("pull");
