@@ -598,8 +598,8 @@ function happyBirthday() {
              [67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,3]];
   const bass = [48, 43, 43, 48, 48, 53, 48, 43, 48];
   const beat = .46; let t = ac.currentTime + .15, b = 0;
-  M.forEach(([m, d]) => { tone(hz(m), t, d * beat * .9, .34); t += d * beat; });
-  for (let i = 0, tt = ac.currentTime + .15 + beat; i < bass.length; i++, tt += beat * 3) tone(hz(bass[i]), tt, beat * 2.6, .16);
+  M.forEach(([m, d]) => { tone(hz(m), t, d * beat * .9, .5); t += d * beat; });
+  for (let i = 0, tt = ac.currentTime + .15 + beat; i < bass.length; i++, tt += beat * 3) tone(hz(bass[i]), tt, beat * 2.6, .24);
   return t - ac.currentTime;
 }
 let musicTimer = 0;
