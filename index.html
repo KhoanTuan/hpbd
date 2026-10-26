@@ -126,6 +126,10 @@ body.dark #sky, body.dark #fx { opacity: 0; }
 #flyer { position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .4s ease;
   background: #fff8e6; box-shadow: 0 0 14px 5px rgba(241, 217, 167, .9), 0 0 40px 14px rgba(241, 217, 167, .35); }
 #flyer.on { opacity: 1; }
+/* the typed wish, letter by letter, as it pulls together into the star */
+.gather { position: fixed; z-index: 5; pointer-events: none; overflow: hidden; white-space: pre; }
+.gather span { display: inline-block; color: var(--ink); transition: transform .9s cubic-bezier(.55, 0, .35, 1), opacity .9s ease-in, color .4s ease, text-shadow .4s ease; }
+.gather.pull span { color: #fff3d6; text-shadow: 0 0 8px rgba(241, 217, 167, .9); }
 
 /* Talking stars */
 .wstar {
@@ -1020,20 +1024,49 @@ function sendWish() {
   // a wish must have words before the sky can wake
   if (!input.value.trim()) { input.setCustomValidity("Viết đi"); input.reportValidity(); return; }
   saveWish(input.value.trim().slice(0, 80));
+  // the written words pull together into one point of light where they were typed, then that light rises
+  const pt = gatherLetters(input, r);
   input.blur();
-  // the screen stays dark until the wish star bursts
-  const w = { sx: r.left + r.width / 2, sy: r.top, tx: W * (.15 + Math.random() * .7), ty: H * (.1 + Math.random() * .25), arrived: false };
-  w.x = w.sx; w.y = w.sy; wishes.push(w);
-  $("spot").classList.add("on"); $("flyer").classList.add("on"); moveWish(w.x, w.y);
-  try { localStorage.setItem("trang-wishes", JSON.stringify(wishes.map(v => [v.tx ?? v.x, v.ty ?? v.y]))); } catch (err) {}
-  chime(5);
   $("wishForm").hidden = true;
+  // the screen stays dark until the wish star bursts
+  const w = { sx: pt.x, sy: pt.y, tx: W * (.15 + Math.random() * .7), ty: H * (.1 + Math.random() * .25), arrived: false };
+  w.x = w.sx; w.y = w.sy;
+  moveWish(w.x, w.y);
+  later(() => { $("spot").classList.add("on"); $("flyer").classList.add("on"); chime(5); }, 650);
+  later(() => wishes.push(w), 1100);
+  try { localStorage.setItem("trang-wishes", JSON.stringify([...wishes, w].map(v => [v.tx ?? v.x, v.ty ?? v.y]))); } catch (err) {}
   $("l6").textContent = "";
   type($("l6"), CONFIG.ending, 40);
 }
 $("wishForm").addEventListener("submit", e => { e.preventDefault(); sendWish(); });
 $("wishForm").querySelector("button").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); sendWish(); });
 $("wishInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendWish(); } });
+// lays the typed letters over the input, then slides them into one point; returns that point
+function gatherLetters(input, r) {
+  const cs = getComputedStyle(input);
+  const padL = parseFloat(cs.paddingLeft) + parseFloat(cs.borderLeftWidth), padR = parseFloat(cs.paddingRight) + parseFloat(cs.borderRightWidth);
+  const box = document.createElement("div"), row = document.createElement("div");
+  box.className = "gather";
+  Object.assign(box.style, { left: r.left + padL + "px", top: r.top + "px", width: r.width - padL - padR + "px", height: r.height + "px",
+    lineHeight: r.height + "px", font: cs.font, letterSpacing: cs.letterSpacing });
+  row.style.transform = `translateX(${-input.scrollLeft}px)`;
+  [...input.value].forEach(ch => { const s = document.createElement("span"); s.textContent = ch; row.appendChild(s); });
+  box.appendChild(row); document.body.appendChild(box);
+  const spans = [...row.children], first = spans[0].getBoundingClientRect(), lastR = spans[spans.length - 1].getBoundingClientRect();
+  const bl = r.left + padL, br = r.right - padR;
+  const pt = { x: Math.min(br, Math.max(bl, (Math.max(bl, first.left) + Math.min(br, lastR.right)) / 2)), y: r.top + r.height / 2 };
+  const moves = spans.map(s => { const b = s.getBoundingClientRect(); return [pt.x - (b.left + b.width / 2), pt.y - (b.top + b.height / 2)]; });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    box.classList.add("pull");
+    spans.forEach((s, i) => {
+      s.style.transitionDelay = Math.min(i * 18, 300) + "ms";
+      s.style.transform = `translate(${moves[i][0]}px, ${moves[i][1]}px) scale(.15)`;
+      s.style.opacity = "0";
+    });
+  }));
+  setTimeout(() => box.remove(), 1600);
+  return pt;
+}
 // moves the light pool and the flying star together
 function moveWish(x, y) {
   const s = $("spot"), f = $("flyer");
