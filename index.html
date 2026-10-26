@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Trời sao của Chang</title>
+<title>HPBD</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -528,7 +528,8 @@ function target(i, proj) {
   }
 }
 // resting stars stay mostly hidden until the wish wakes the sky
-const idleA = i => wakeT < 0 ? (i % 7 === 0 ? .35 : 0) : .5;
+// the sky's stars stay hidden until the wish wakes them, so the lock screen and the talking stars stay clean
+const idleA = i => wakeT < 0 ? 0 : .5;
 const CONS_T0 = 2.4, CONS_STEP = .42, CONS_LEN = .55;
 const consLit = SCORPIO.s.map((_, j) => {
   let t = Infinity;
