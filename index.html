@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trời sao của Chang</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05070f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Be+Vietnam+Pro:wght@300;400&display=swap">
+<style>
+* { box-sizing: border-box; } body { margin: 0; } [hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+/* Layout: one full-screen night sky; each act is a caption panel at the bottom while the stars on the canvas change shape above it */
+:root {
+  --sky-top: #05070f;
+  --sky-mid: #0d1530;
+  --sky-low: #1a2448;
+  --ink: #ece9f7;
+  --ink-dim: #9aa0c2;
+  --gold: #f1d9a7;
+  --rose: #f3b6c6;
+  --glass: rgba(10, 14, 32, .78);
+  --line: rgba(233, 230, 245, .24);
+  --display: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
+  --body: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--sky-top); color: var(--ink); font-family: var(--body);
+  overflow: hidden; overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
+  -webkit-text-size-adjust: 100%;
+}
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#sky { background: radial-gradient(ellipse 120% 80% at 50% 110%, var(--sky-low) 0%, var(--sky-mid) 40%, var(--sky-top) 85%); }
+
+.fade { transition: opacity .9s ease, transform .9s ease, visibility 0s; }
+.fade.out { opacity: 0; transform: translateY(10px); visibility: hidden; transition: opacity .7s ease, transform .7s ease, visibility 0s .7s; }
+.fade.out, .fade.out * { pointer-events: none !important; }
+
+.top {
+  position: fixed; left: 0; right: 0; top: 0; text-align: center; pointer-events: none;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 22px);
+  padding-left: max(56px, env(safe-area-inset-left, 0px)); padding-right: max(56px, env(safe-area-inset-right, 0px));
+}
+.eyebrow { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--ink-dim); }
+.top h1 {
+  font-family: var(--display); font-weight: 300; font-style: italic;
+  font-size: clamp(32px, 7vw, 56px); margin: 6px 0 0; color: var(--gold); line-height: 1.05;
+  text-wrap: balance; text-shadow: 0 0 24px rgba(241, 217, 167, .25);
+}
+
+.panel {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.panel > * { pointer-events: auto; }
+.panel.center { top: 0; justify-content: center; }
+.name {
+  font-family: var(--display); font-weight: 300; font-style: italic;
+  font-size: clamp(56px, 13vw, 104px); line-height: 1; margin: 0; letter-spacing: .02em;
+  text-shadow: 0 0 24px rgba(200, 210, 255, .35);
+}
+.big {
+  font-family: var(--display); font-weight: 300; font-style: italic;
+  font-size: clamp(34px, 8vw, 60px); line-height: 1.1; margin: 0; text-wrap: balance;
+}
+.meta { font-size: 13px; color: var(--ink-dim); letter-spacing: .08em; }
+.line { max-width: 30em; font-size: 15px; line-height: 1.7; font-weight: 300; margin: 0; text-wrap: pretty; min-height: 1.7em; }
+.hint { font-size: 12px; color: var(--ink-dim); letter-spacing: .06em; min-height: 1.4em; }
+.pulse { animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  font: inherit; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--sky-top); background: var(--gold); border: 0; border-radius: 999px;
+  padding: 13px 26px; min-height: 46px; cursor: pointer;
+  box-shadow: 0 0 30px rgba(241, 217, 167, .35); transition: transform .2s, box-shadow .2s, opacity .4s;
+}
+.btn.sm { font-size: 11px; padding: 9px 20px; min-height: 38px; letter-spacing: .16em; }
+/* intro: the stack keeps a fixed spot, parts fade in only after the constellation is drawn */
+#s1 { top: 64%; bottom: auto; justify-content: flex-start; }
+#s1 .name { opacity: 0; transition: opacity 1s ease; }
+#s1 .name.on { opacity: 1; }
+#l1 { font-size: 19px; }
+#b1 { opacity: 0; visibility: hidden; transition: opacity .6s ease, visibility .6s; }
+#b1.on { opacity: 1; visibility: visible; }
+.btn:active { transform: scale(.97); }
+.btn.ghost { background: rgba(5, 7, 15, .35); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.btn:focus-visible, .sound:focus-visible, .wstar:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+.btn[hidden] { display: none; }
+
+.sound {
+  position: fixed; z-index: 5;
+  top: calc(env(safe-area-inset-top, 0px) + 14px); right: max(14px, calc(env(safe-area-inset-right, 0px) + 10px));
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
+  background: rgba(5, 7, 15, .35); color: var(--ink); font-size: 16px; cursor: pointer;
+  display: grid; place-items: center;
+}
+.sound.off { color: var(--ink-dim); text-decoration: line-through; }
+#dim { position: fixed; inset: 0; z-index: 4; background: #000; opacity: 0; pointer-events: none; transition: opacity .9s ease; }
+#dim.on { opacity: 1; }
+/* while the wish is written the sky is pitch black; sending it lights the sky back up */
+/* the sky is revealed by a ring of light growing out from the star that burst */
+#sky, #fx {
+  -webkit-mask-image: radial-gradient(circle at var(--bx, 50%) var(--by, 50%), #000 var(--rr, 9999px), transparent calc(var(--rr, 9999px) + 90px));
+  mask-image: radial-gradient(circle at var(--bx, 50%) var(--by, 50%), #000 var(--rr, 9999px), transparent calc(var(--rr, 9999px) + 90px));
+}
+body { transition: background 1.2s ease; }
+body.dark { background: #000; }
+body.dark #sky, body.dark #fx { opacity: 0; }
+/* while the wish flies, only a pool of light around the star is lit */
+#spot { position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .6s ease; --x: 50%; --y: 50%;
+  background: radial-gradient(circle 160px at var(--x) var(--y), rgba(255, 236, 200, .3) 0%, rgba(241, 217, 167, .1) 50%, rgba(241, 217, 167, 0) 100%); }
+#spot.on { opacity: 1; }
+#flyer { position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .4s ease;
+  background: #fff8e6; box-shadow: 0 0 14px 5px rgba(241, 217, 167, .9), 0 0 40px 14px rgba(241, 217, 167, .35); }
+#flyer.on { opacity: 1; }
+
+/* Talking stars */
+.wstar {
+  position: fixed; width: 48px; height: 48px; margin: -24px 0 0 -24px; border: 0; background: none;
+  cursor: pointer; display: grid; place-items: center; z-index: 2;
+  transition: opacity .9s ease, transform .9s ease, visibility 0s, left 1s cubic-bezier(.4, 0, .2, 1), top 1s cubic-bezier(.4, 0, .2, 1);
+}
+.wstar::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff8e6;
+  box-shadow: 0 0 10px 3px rgba(241, 217, 167, .9), 0 0 28px 10px rgba(241, 217, 167, .35);
+  animation: breathe 2.2s ease-in-out infinite;
+}
+.wstar.read::before { background: var(--rose); box-shadow: 0 0 8px 2px rgba(243, 182, 198, .6); animation: none; opacity: .7; }
+@keyframes breathe { 50% { transform: scale(1.5); } }
+.card {
+  max-width: 30em; width: 100%; padding: 16px 20px; border-radius: 16px;
+  background: var(--glass); border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 15px; line-height: 1.7; font-weight: 300; text-wrap: pretty; min-height: 4.4em;
+  display: grid; place-items: center;
+}
+.card { transition: opacity .18s; }
+.ctitle { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+.cnote { font-size: 11px; letter-spacing: .06em; color: var(--ink-dim); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.wstar.now::before { background: #fff; box-shadow: 0 0 12px 4px rgba(243, 182, 198, .9), 0 0 30px 12px rgba(243, 182, 198, .35); opacity: 1; }
+.count { font-size: 12px; letter-spacing: .2em; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* Letter */
+.letter {
+  width: min(30em, 100%); max-height: min(68vh, 560px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  text-align: left; padding: 26px 24px 22px; border-radius: 18px;
+  background: var(--glass); border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  -webkit-user-select: text; user-select: text;
+}
+.letter .to { font-family: var(--display); font-style: italic; font-size: 28px; color: var(--gold); margin: 0 0 10px; }
+.letter .body { font-size: 15px; line-height: 1.8; font-weight: 300; white-space: pre-line; margin: 0; min-height: 8em; }
+.letter .sign { font-family: var(--display); font-style: italic; font-size: 24px; text-align: right; margin: 14px 0 0; color: var(--rose); }
+.caret::after { content: "|"; animation: pulse 1s steps(1) infinite; color: var(--gold); }
+
+.wish { display: flex; gap: 8px; width: min(26em, 100%); }
+.wish input {
+  flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--ink);
+  background: rgba(5, 7, 15, .5); border: 1px solid var(--line); border-radius: 999px; padding: 12px 18px;
+  -webkit-user-select: text; user-select: text;
+}
+.wish input::placeholder { color: var(--ink-dim); }
+.wish input:focus { outline: 1px solid var(--gold); }
+
+@media (max-height: 640px) { .name { font-size: 52px; } .line, .card { font-size: 14px; } .letter { max-height: 60vh; } }
+@media (prefers-reduced-motion: reduce) { .fade, .fade.out { transition: none; } .pulse, .wstar::before { animation: none; } }
+</style>
+
+</head>
+<body>
+<canvas id="sky"></canvas>
+<canvas id="fx" aria-label="Bầu trời sao"></canvas>
+
+<button class="sound" id="sound" type="button" aria-label="Bật hoặc tắt nhạc">♪</button>
+<div id="dim"></div>
+<div id="spot"></div>
+<div id="flyer"></div>
+
+<header class="top fade out" id="topTitle">
+  <div class="eyebrow">Scorpio · 26 · 10</div>
+  <h1 id="topText">Happy Birthday, Chang</h1>
+</header>
+
+<!-- Act 0: lock screen -->
+<section class="panel center fade" id="s0">
+  <div class="eyebrow">26 · 10 · 2026</div>
+  <h2 class="big">Một vì sao<br>cho Chang</h2>
+  <p class="hint pulse" style="margin-top:18px">Chạm vào màn hình để mở</p>
+</section>
+
+<!-- Act 1: Scorpio -->
+<section class="panel fade out" id="s1">
+  <h2 class="name">Scorpio</h2>
+  <p class="line" id="l1"></p>
+  <button class="btn sm" id="b1" type="button">Tiếp tục</button>
+</section>
+
+<!-- Act 2: cake -->
+<section class="panel fade out" id="s2">
+  <p class="line" id="l2"></p>
+  <div class="hint" id="h2">Kéo để xoay chiếc bánh</div>
+</section>
+
+<!-- Act 3: after the candles -->
+<section class="panel fade out" id="s3">
+  <p class="line" id="l3"></p>
+</section>
+
+<!-- Act 4: talking stars -->
+<section class="panel fade out" id="s4">
+  <div class="count" id="count">0 / 7</div>
+  <div class="card" id="card"></div>
+  <button class="btn" id="b4" type="button" hidden>Mở thư</button>
+</section>
+<div id="wstars"></div>
+
+<!-- Act 5: letter -->
+<section class="panel center fade out" id="s5">
+  <article class="letter" id="letter">
+    <p class="to" id="to"></p>
+    <p class="body" id="letterBody"></p>
+    <p class="sign" id="sign"></p>
+  </article>
+  <button class="btn" id="b5" type="button" hidden>Gửi một điều ước lên trời</button>
+</section>
+
+<!-- Act 6: wish -->
+<section class="panel fade out" id="s6">
+  <p class="line" id="l6"></p>
+  <form class="wish" id="wishForm">
+    <input id="wishInput" type="text" maxlength="80" placeholder="Điều ước của Chang..." autocomplete="off" enterkeyhint="send">
+    <button class="btn" type="submit">Gửi</button>
+  </form>
+  <button class="btn ghost" id="again" type="button" hidden>Xem lại từ đầu</button>
+</section>
+
+<script>
+// ================= Edit these to make it yours =================
+const CONFIG = {
+  name: "Chang",
+  from: "K",
+  intro: "Hôm nay là ngày của ai vậy nhỉ?",
+  afterBlow: "Điều ước đã ở trên trời rồi. Tuổi mới thật rực rỡ nhé, nhậu thôi 🍺",
+  // What each gold star says. "shape" is what the sky draws when it is tapped:
+  // cat, milktea, pig, ghost, crown, star, envelope, smile, flower, scorpio, butterfly, moon
+  // Messages are read in this order whichever star is tapped
+  stars: [
+    { shape: "cat", title: "Fact", text: "Người xink nhất hôm nay is u 🫵, ko bàn cãi." },
+    { shape: "star", title: "Breaking news", text: "Ngôi sao sáng nhất tối nay đang cầm điện thoại đọc dòng này ✨" },
+    { shape: "crown", title: "Queen of the day", text: "Hôm nay u nói gì cũng đúng 👑" },
+    { shape: "ghost", title: "Thông báo", text: "No deadline, No KPI." },
+    { shape: "pig", title: "Lương", text: "Lương tăng, lương tăng 😙" },
+    { shape: "milktea", title: "Phản ứng", text: "Khách ố dề, VAR tại chỗ 👊" },
+    { shape: "smile", title: "Last one", text: "Mở thư đi nè 💌" },
+  ],
+  starsDone: "Chạm để mở thư nhé.",
+  letterTo: "Gửi Chang,",
+  letter:
+`Nay 26/10, tuổi mới chúc Đằng Ấy nhiều sức khoẻ, tự tin, cá tính, và có nhiều nhiều ngày vui nhé. Ngày nào không vui thì cứ qua đây tám xàm nhé kkk 😎
+
+Chúc mừng sinh nhật nhé cô gái 🎉🎉`,
+  ending: "Điều ước đang bay lên trời...",
+};
+// ===============================================================
+
+const $ = id => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sky = $("sky"), fx = $("fx");
+const sc = sky.getContext("2d"), fc = fx.getContext("2d");
+let W = 0, H = 0, bg = [];
+
+// Pre-rendered glow sprites keep the frame cheap on phones
+function sprite(rgb) {
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,255,250,1)");
+  gr.addColorStop(.08, `rgba(${rgb},.95)`);
+  gr.addColorStop(.25, `rgba(${rgb},.35)`);
+  gr.addColorStop(1, `rgba(${rgb},0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return c;
+}
+const SPR = { gold: sprite("241,217,167"), white: sprite("205,215,255"), rose: sprite("243,170,195"), flame: sprite("255,190,110") };
+function glow(spr, x, y, r, a) {
+  if (a <= .01) return;
+  fc.globalAlpha = Math.min(1, a);
+  const s = r * 9;
+  fc.drawImage(spr, x - s / 2, y - s / 2, s, s);
+}
+
+// After the wish the sky wakes up: aurora, nebula clouds, coloured stars turning slowly
+let magic = 0, magicTarget = 0, skyTurn = 0, wakeT = -1, wakeX = 0, wakeY = 0;
+const ripples = [];
+function blob(rgb) {
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, `rgba(${rgb},.55)`); gr.addColorStop(.5, `rgba(${rgb},.18)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return c;
+}
+const NEB = [blob("236,120,190"), blob("140,110,255"), blob("70,200,210"), blob("255,170,120")];
+const NEB_POS = [[.2,.25,.9],[.78,.18,1.1],[.6,.55,.8],[.3,.6,.7],[.85,.45,.6]];
+const STAR_COLS = ["#f4f1ff", "#ffd9ec", "#cfe3ff", "#fff0c9", "#d9ccff"];
+function drawMagic(dt) {
+  magic += (magicTarget - magic) * Math.min(1, dt * .6);
+  if (magic < .005) return;
+  sc.globalCompositeOperation = "lighter";
+  // nebula
+  NEB_POS.forEach(([x, y, k], i) => {
+    const size = Math.max(W, H) * .75 * k * (1 + .08 * Math.sin(now * .3 + i));
+    const cx = W * x + Math.sin(now * .07 + i * 2) * W * .05, cy = H * y + Math.cos(now * .05 + i) * H * .04;
+    sc.globalAlpha = magic * .55;
+    sc.drawImage(NEB[i % NEB.length], cx - size / 2, cy - size / 2, size, size);
+  });
+  // aurora curtains
+  const bands = [["90,255,200", .16, 0], ["150,120,255", .24, 2], ["255,130,200", .1, 4]];
+  for (const [rgb, base, ph] of bands) {
+    const yb = H * base, amp = H * .05, hgt = H * .22, step = Math.max(6, W / 90);
+    for (let x = 0; x < W + step; x += step) {
+      const y = yb + Math.sin(x * .006 + now * .5 + ph) * amp + Math.sin(x * .017 - now * .8 + ph) * amp * .4;
+      const shimmer = .55 + .45 * Math.sin(x * .03 + now * 2.2 + ph);
+      const g = sc.createLinearGradient(0, y, 0, y + hgt);
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(.25, `rgba(${rgb},${.22 * shimmer * magic})`);
+      g.addColorStop(1, `rgba(${rgb},0)`);
+      sc.globalAlpha = 1; sc.fillStyle = g; sc.fillRect(x, y, step + 1, hgt);
+    }
+  }
+  sc.globalAlpha = 1;
+  sc.globalCompositeOperation = "source-over";
+}
+function drawRipples(dt) {
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i]; r.life += dt;
+    const k = r.life / 2.4, rad = k * Math.hypot(W, H) * .9;
+    fc.strokeStyle = `rgba(${r.rgb},${.6 * (1 - k)})`; fc.lineWidth = 2 * (1 - k) + .5;
+    fc.beginPath(); fc.arc(r.x, r.y, rad, 0, Math.PI * 2); fc.stroke();
+    if (k >= 1) ripples.splice(i, 1);
+  }
+}
+
+// ---------- shapes the stars can form ----------
+const SCORPIO = {
+  s: [[.1,.2],[.18,.32],[.12,.45],[.3,.4],[.42,.5],[.5,.62],[.58,.75],[.72,.82],[.86,.75],[.9,.6],[.8,.52]],
+  l: [[0,1],[1,2],[1,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10]],
+};
+const cake = { pts: [], lines: [], candles: [] };
+function ring(r, y, n, wave = 0, waves = 0) {
+  const start = cake.pts.length;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2;
+    cake.pts.push({ x: Math.cos(a) * r, y: y + (waves ? Math.cos(a * waves) * wave : 0), z: Math.sin(a) * r, b: i % 6 === 0 });
+    cake.lines.push([start + i, start + (i + 1) % n]);
+  }
+  return start;
+}
+function tier(r, y0, h, n) {
+  const bot = ring(r, y0, n); ring(r, y0 + h, n);
+  const drip = ring(r * 1.005, y0 + h - h * .22, n, h * .1, Math.round(n / 3));
+  for (let i = 0; i < n; i += 3) cake.lines.push([bot + i, drip + i]);
+  ring(r * .55, y0 + h, Math.round(n * .55));
+}
+ring(1.3, -.02, 44);
+tier(1, 0, .55, 36);
+tier(.7, .55, .45, 30);
+tier(.42, 1, .36, 22);
+[[-.22, .1], [.05, -.2], [.25, .12], [0, .26], [-.05, 0]].forEach(([x, z]) => {
+  const base = cake.pts.length;
+  cake.pts.push({ x, y: 1.36, z, b: false }, { x, y: 1.66, z, b: true });
+  cake.lines.push([base, base + 1]);
+  cake.candles.push(base + 1);
+});
+const N = cake.pts.length;
+
+let rotY = .6, rotV = .25, dragging = false;
+function project(p) {
+  const cy = Math.cos(rotY), sy = Math.sin(rotY), t = .42, ct = Math.cos(t), st = Math.sin(t);
+  const x1 = p.x * cy + p.z * sy, z1 = -p.x * sy + p.z * cy, y0 = p.y - .8;
+  const y2 = y0 * ct + z1 * st, z2 = -y0 * st + z1 * ct;
+  const f = 5 / (5 + z2), s = Math.min(W * .3, H * .19, 230);
+  return { x: W / 2 + x1 * s * f, y: H * .46 - y2 * s * f, f, z: z2 };
+}
+function consXY(i) {
+  const size = Math.min(W * .7, H * .4, 440);
+  const [x, y] = SCORPIO.s[i];
+  return [W / 2 - size / 2 + x * size, H * .44 - size * .6 + y * size];
+}
+function heartXY(i) {
+  const outline = Math.floor(N * .62);
+  let t, k;
+  if (i < outline) { t = i / outline * Math.PI * 2; k = 1; }
+  else { t = (i * 2.399) % (Math.PI * 2); k = .25 + ((i * .618) % 1) * .65; }
+  const s = Math.min(W * .62, H * .42, 380) / 34 * (1 + .04 * Math.sin(now * 6) * (now * 6 % (Math.PI * 2) < Math.PI ? 1 : .3));
+  const x = 16 * Math.pow(Math.sin(t), 3), y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+  return [W / 2 + x * s * k, H * .42 - y * s * k - 2 * s];
+}
+let textPts = [];
+function buildText() {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  let size = Math.min(W * .34, H * .22, 190);
+  g.font = `italic 400 ${size}px "Cormorant Garamond", Garamond, serif`;
+  const w = g.measureText(CONFIG.name).width;
+  if (w > W * .86) { size *= W * .86 / w; g.font = `italic 400 ${size}px "Cormorant Garamond", Garamond, serif`; }
+  g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(CONFIG.name, W / 2, H * .44);
+  const d = g.getImageData(0, 0, W, H).data, pts = [];
+  const step = Math.max(2, Math.round(size / 40));
+  for (let y = 0; y < H; y += step) for (let x = 0; x < W; x += step) if (d[(y * W + x) * 4 + 3] > 140) pts.push([x, y]);
+  for (let i = pts.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [pts[i], pts[j]] = [pts[j], pts[i]]; }
+  textPts = Array.from({ length: N }, (_, i) => pts.length ? pts[i % pts.length] : [W / 2, H / 2]);
+}
+
+// Pictures the sky draws for the talking stars, in a -1..1 box
+function alongPaths(paths, n) {
+  const segs = []; let total = 0;
+  for (const path of paths) for (let i = 0; i < path.length - 1; i++) {
+    const [a, b] = [path[i], path[i + 1]], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    segs.push([a, b, len]); total += len;
+  }
+  return Array.from({ length: n }, (_, i) => {
+    let d = (i + .5) / n * total;
+    for (const [a, b, len] of segs) { if (d <= len) { const k = d / len; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; } d -= len; }
+    return segs.at(-1)[1];
+  });
+}
+const arc = (cx, cy, r, a0, a1, n = 48, ry = r) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [cx + Math.cos(a) * r, cy + Math.sin(a) * ry]; });
+const SHAPES = {
+  smile: () => [arc(0, 0, 1, 0, Math.PI * 2), arc(-.36, -.3, .1, 0, Math.PI * 2, 12), arc(.36, -.3, .1, 0, Math.PI * 2, 12), arc(0, .05, .55, .25, Math.PI - .25)],
+  flower: () => [Array.from({ length: 241 }, (_, i) => { const a = i / 240 * Math.PI * 2, r = .35 + .65 * Math.abs(Math.cos(2.5 * a)); return [Math.cos(a) * r, Math.sin(a) * r]; }), arc(0, 0, .16, 0, Math.PI * 2, 16)],
+  scorpio: () => SCORPIO.l.map(([a, b]) => [SCORPIO.s[a], SCORPIO.s[b]].map(([x, y]) => [x * 2 - 1, y * 2 - 1])),
+  butterfly: () => [Array.from({ length: 600 }, (_, i) => {
+    const t = i / 599 * Math.PI * 12, r = Math.exp(Math.sin(t)) - 2 * Math.cos(4 * t) + Math.pow(Math.sin((2 * t - Math.PI) / 24), 5);
+    return [Math.sin(t) * r / 2.7, -Math.cos(t) * r / 2.7 + .25];
+  })],
+  moon: () => [arc(0, 0, 1, Math.PI * .5, Math.PI * 1.5).concat(arc(.38, 0, .9, Math.PI * 1.38, Math.PI * .62).filter(([x, y]) => Math.hypot(x, y) <= 1.01)),
+    arc(.5, -.55, .06, 0, Math.PI * 2, 8), arc(.75, -.1, .05, 0, Math.PI * 2, 8)],
+  star: () => [Array.from({ length: 11 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .42 : 1; return [Math.cos(a) * r, Math.sin(a) * r + .08]; })],
+  heart: () => [Array.from({ length: 200 }, (_, i) => { const t = i / 199 * Math.PI * 2; return [16 * Math.pow(Math.sin(t), 3) / 16, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 16 + .1]; })],
+  cat: () => [
+    [[-.75, -.4], [-.62, -1], [-.25, -.66], [.25, -.66], [.62, -1], [.75, -.4]],
+    arc(0, -.02, .8, -.55, Math.PI + .55, 48),
+    arc(-.3, -.12, .08, 0, Math.PI * 2, 10), arc(.3, -.12, .08, 0, Math.PI * 2, 10),
+    [[-.07, .1], [.07, .1], [0, .18], [-.07, .1]],
+    arc(-.1, .2, .1, 0, Math.PI, 10), arc(.1, .2, .1, 0, Math.PI, 10),
+    [[-.45, .12], [-1.05, .02]], [[-.45, .24], [-1.05, .3]], [[.45, .12], [1.05, .02]], [[.45, .24], [1.05, .3]],
+  ],
+  milktea: () => [
+    [[-.55, -.4], [.55, -.4], [.42, .95], [-.42, .95], [-.55, -.4]],
+    arc(0, -.4, .58, Math.PI, Math.PI * 2, 24, .28),
+    [[.06, -.62], [.24, -1.15], [.4, -1.15]],
+    ...[[-.25, .78], [0, .8], [.25, .78], [-.13, .6], [.13, .6], [-.3, .45], [.3, .45]].map(([x, y]) => arc(x, y, .07, 0, Math.PI * 2, 8)),
+  ],
+  pig: () => [
+    arc(0, .05, .8, 0, Math.PI * 2, 56),
+    [[-.5, -.55], [-.78, -.98], [-.22, -.75]], [[.5, -.55], [.78, -.98], [.22, -.75]],
+    arc(0, .25, .34, 0, Math.PI * 2, 30, .22),
+    arc(-.12, .25, .05, 0, Math.PI * 2, 6), arc(.12, .25, .05, 0, Math.PI * 2, 6),
+    arc(-.32, -.15, .06, 0, Math.PI * 2, 8), arc(.32, -.15, .06, 0, Math.PI * 2, 8),
+  ],
+  ghost: () => [
+    [[-.6, .9], [-.6, -.1]].concat(arc(0, -.1, .6, Math.PI, Math.PI * 2, 28)).concat([[.6, .9], [.4, .7], [.2, .9], [0, .7], [-.2, .9], [-.4, .7], [-.6, .9]]),
+    arc(-.22, -.1, .08, 0, Math.PI * 2, 10, .13), arc(.22, -.1, .08, 0, Math.PI * 2, 10, .13),
+    arc(0, .28, .1, 0, Math.PI * 2, 10, .13),
+    [[.72, -.5], [.9, -.62]], [[.75, -.25], [.98, -.25]],
+  ],
+  crown: () => [
+    [[-.9, .5], [-.9, -.4], [-.45, .05], [0, -.62], [.45, .05], [.9, -.4], [.9, .5], [-.9, .5]],
+    [[-.9, .28], [.9, .28]],
+    ...[[-.9, -.5], [0, -.74], [.9, -.5]].map(([x, y]) => arc(x, y, .08, 0, Math.PI * 2, 10)),
+    arc(-.45, .42, .06, 0, Math.PI * 2, 8), arc(0, .4, .08, 0, Math.PI * 2, 10), arc(.45, .42, .06, 0, Math.PI * 2, 8),
+  ],
+  envelope: () => [[[-1, -.62], [1, -.62], [1, .62], [-1, .62], [-1, -.62]], [[-1, -.62], [0, .1], [1, -.62]], [[-1, .62], [-.3, -.05]], [[1, .62], [.3, -.05]]],
+  envelopeOpen: () => [[[-1, -.62], [1, -.62], [1, .62], [-1, .62], [-1, -.62]], [[-1, -.62], [0, -1.35], [1, -.62]], [[-1, .62], [0, -.05], [1, .62]],
+    Array.from({ length: 40 }, (_, i) => { const t = i / 39 * Math.PI * 2; return [Math.pow(Math.sin(t), 3) * .16, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 16 * .16 - .95]; })],
+  oldEnvelope: () => [[[-1, -.62], [1, -.62], [1, .62], [-1, .62], [-1, -.62]], [[-1, -.62], [0, .1], [1, -.62]], [[-1, .62], [-.3, -.05]], [[1, .62], [.3, -.05]]],
+};
+let shapePts = [], shapeScale = 1;
+function buildShape(name) {
+  const paths = (SHAPES[name] || SHAPES.star)();
+  shapePts = alongPaths(paths, N);
+}
+
+// ---------- particles ----------
+let mode = "sky", modeT = 0, lineA = 0;
+const P = [];
+function homes() {
+  for (const p of P) { p.hx = Math.random() * W; p.hy = Math.random() * H * .85; }
+}
+function makeParticles() {
+  P.length = 0;
+  for (let i = 0; i < N; i++) P.push({ x: 0, y: 0, fx: 0, fy: 0, fa: 0, ca: 0, d: 0, tw: Math.random() * 7, hx: 0, hy: 0 });
+  homes();
+  for (const p of P) { p.x = p.fx = p.hx; p.y = p.fy = p.hy; }
+}
+function morph(m, spread = .6) {
+  if (m === "text") buildText();
+  mode = m; modeT = now; lineA = 0;
+  for (const p of P) { p.fx = p.x; p.fy = p.y; p.fa = p.ca ?? 0; p.d = Math.random() * spread; }
+}
+function target(i, proj) {
+  const p = P[i];
+  switch (mode) {
+    case "cons": return i < SCORPIO.s.length ? [...consXY(i), 2.3, 1, "gold"] : [p.hx, p.hy, .9, idleA(i), "white"];
+    case "cake": {
+      const q = proj[i], depth = 1 - Math.min(1, Math.max(0, (q.z + 1.3) / 2.6));
+      return [q.x, q.y, (cake.pts[i].b ? 1.6 : 1.05) * q.f, .35 + .65 * depth, cake.pts[i].b ? "gold" : "white"];
+    }
+    case "heart": return [...heartXY(i), i % 5 ? 1.1 : 1.6, .95, i % 3 ? "rose" : "gold"];
+    case "text": return [...textPts[i], i % 7 ? 1 : 1.5, .95, i % 4 ? "gold" : "white"];
+    case "shape": {
+      const s = boxE() * shapeScale, [ux, uy] = shapePts[i];
+      return [W / 2 + ux * s + Math.sin(now * 2 + p.tw) * 1.2, H * ENV_Y + uy * s, i % 6 ? 1 : 1.5, .9, i % 3 ? "gold" : "rose"];
+    }
+    default: return [p.hx, p.hy, .9, idleA(i), "white"];
+  }
+}
+// resting stars stay mostly hidden until the wish wakes the sky
+const idleA = i => wakeT < 0 ? (i % 7 === 0 ? .35 : 0) : .5;
+const CONS_T0 = 2.4, CONS_STEP = .42, CONS_LEN = .55;
+const consLit = SCORPIO.s.map((_, j) => {
+  let t = Infinity;
+  SCORPIO.l.forEach(([a, b], i) => {
+    const t0 = CONS_T0 + i * CONS_STEP;
+    if (a === j) t = Math.min(t, t0);
+    if (b === j) t = Math.min(t, t0 + CONS_LEN);
+  });
+  return t;
+});
+const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+
+// ---------- effects ----------
+const meteors = [], sparks = [], smoke = [], wishes = [];
+let flame = 0, flameOn = false;
+function meteor(x, y) {
+  const dir = Math.random() < .5 ? 1 : -1;
+  meteors.push({ x: x ?? Math.random() * W * .8 + W * .1, y: y ?? Math.random() * H * .4, vx: dir * (360 + Math.random() * 300), vy: 180 + Math.random() * 180, life: 0, max: .8 + Math.random() * .5 });
+}
+function burst(x, y, n = 60) {
+  const cols = ["gold", "rose", "white"];
+  for (let k = 0; k < n; k++) {
+    const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 180;
+    sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 1 + Math.random() * .8, c: cols[k % 3] });
+  }
+  chime(4);
+}
+try { JSON.parse(localStorage.getItem("trang-wishes") || "[]").forEach(w => wishes.push({ x: w[0], y: w[1], arrived: true })); } catch (e) {}
+
+// ---------- sound: a music box Happy Birthday made with Web Audio ----------
+let ac = null, master = null, soundOn = true;
+function initAudio() {
+  if (ac) { ac.resume?.(); return; }
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = .55;
+    const delay = ac.createDelay(); delay.delayTime.value = .3;
+    const fb = ac.createGain(); fb.gain.value = .28;
+    master.connect(ac.destination); master.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(ac.destination);
+    const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0);
+  } catch (e) { ac = null; }
+}
+function tone(freq, when, dur, vol = .22) {
+  if (!ac) return;
+  const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
+  o.type = "sine"; o2.type = "triangle"; o.frequency.value = freq; o2.frequency.value = freq * 2; g2.gain.value = .12;
+  o.connect(g); o2.connect(g2); g2.connect(g); g.connect(master);
+  g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(vol, when + .012);
+  g.gain.exponentialRampToValueAtTime(.0008, when + dur + .9);
+  o.start(when); o2.start(when); o.stop(when + dur + 1); o2.stop(when + dur + 1);
+}
+// the effects use a glassy bell instead of the music box, so the birthday song stands apart
+function bell(freq, when, dur = .6, vol = .14) {
+  if (!ac) return;
+  [[1, 1], [2.76, .3], [5.4, .1]].forEach(([r, a]) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "sine"; o.frequency.value = freq * r;
+    g.gain.setValueAtTime(0, when); g.gain.linearRampToValueAtTime(vol * a, when + .004);
+    g.gain.exponentialRampToValueAtTime(.0005, when + dur / r);
+    o.connect(g); g.connect(master); o.start(when); o.stop(when + dur + .05);
+  });
+}
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+function happyBirthday() {
+  if (!ac) return;
+  const M = [[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],
+             [67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,3]];
+  const bass = [48, 43, 43, 48, 48, 53, 48, 43, 48];
+  const beat = .46; let t = ac.currentTime + .15, b = 0;
+  M.forEach(([m, d]) => { tone(hz(m), t, d * beat * .9, .34); t += d * beat; });
+  for (let i = 0, tt = ac.currentTime + .15 + beat; i < bass.length; i++, tt += beat * 3) tone(hz(bass[i]), tt, beat * 2.6, .16);
+  return t - ac.currentTime;
+}
+let musicTimer = 0;
+function loopMusic() {
+  clearTimeout(musicTimer);
+  if (act !== 2) return;
+  const len = happyBirthday() || 12;
+  musicTimer = setTimeout(loopMusic, (len + 1.6) * 1000);
+}
+function chime(n = 1) {
+  if (!ac) return;
+  const pent = [79, 81, 84, 86, 88, 91, 93];
+  for (let i = 0; i < n; i++) bell(hz(pent[Math.random() * pent.length | 0]), ac.currentTime + i * .07, .5, .1);
+}
+$("sound").addEventListener("click", e => {
+  e.stopPropagation();
+  soundOn = !soundOn; initAudio();
+  if (master) master.gain.value = soundOn ? .55 : 0;
+  $("sound").classList.toggle("off", !soundOn);
+});
+
+// ---------- loop ----------
+let now = 0, last = performance.now();
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const oldW = W || innerWidth, oldH = H || innerHeight;
+  W = innerWidth; H = innerHeight;
+  for (const c of [sky, fx]) { c.width = W * dpr; c.height = H * dpr; c.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0); }
+  const R = Math.hypot(W, H) * .62, n = Math.round(Math.min(R * R * 4 / 2400, 1100));
+  bg = Array.from({ length: n }, () => ({ x: W / 2 + (Math.random() * 2 - 1) * R, y: H / 2 + (Math.random() * 2 - 1) * R, c: Math.random() * STAR_COLS.length | 0, k: Math.random(), r: Math.random() < .92 ? Math.random() * .9 + .25 : Math.random() + 1, a: Math.random(), d: (Math.random() * .6 + .15) * (Math.random() < .5 ? -1 : 1) }));
+  for (const w of wishes) { w.x *= W / oldW; w.y *= H / oldH; }
+  if (P.length) { homes(); if (mode === "text") buildText(); }
+}
+addEventListener("resize", resize);
+resize(); makeParticles();
+
+function frame(ts) {
+  const dt = Math.min(.05, (ts - last) / 1000); last = ts; now += dt;
+
+  sc.clearRect(0, 0, W, H);
+  // Before the wish the sky is dark and sparse; the wish wakes it from where its star lands
+  const awake = wakeT < 0 ? 0 : Math.min(1, (now - wakeT) / 2.5);
+  if (awake < 1) { sc.fillStyle = `rgba(2,3,9,${.6 * (1 - awake)})`; sc.fillRect(0, 0, W, H); }
+  drawMagic(dt);
+  if (!reduce) skyTurn += dt * .012 * magic;
+  sc.save(); sc.translate(W / 2, H / 2); sc.rotate(skyTurn); sc.translate(-W / 2, -H / 2);
+  for (const s of bg) {
+    if (!reduce) { s.a += s.d * dt * (1 + magic); if (s.a <= .05 || s.a >= 1) s.d = -s.d; }
+    let vis = 1;
+    if (s.k >= .07) vis = wakeT < 0 ? 0 : Math.max(0, Math.min(1, ((now - wakeT) * 650 - Math.hypot(s.x - wakeX, s.y - wakeY)) / 160));
+    else if (wakeT < 0) vis = .6;
+    if (!vis) continue;
+    sc.fillStyle = magic > .05 ? STAR_COLS[s.c] : STAR_COLS[0];
+    sc.globalAlpha = Math.max(.05, Math.min(1, s.a)) * (.8 + .2 * magic) * vis;
+    const r = s.r * (1 + .35 * magic);
+    sc.fillRect(s.x - r, s.y - r, r * 2, r * 2);
+  }
+  sc.restore();
+  sc.globalAlpha = 1;
+
+  fc.clearRect(0, 0, W, H);
+  fc.globalCompositeOperation = "lighter";
+
+  if (mode === "cake") { if (!dragging) rotY += rotV * dt; rotV += (.25 - rotV) * Math.min(1, dt * 1.5); }
+  const proj = mode === "cake" ? cake.pts.map(project) : null;
+  const el = now - modeT, dur = reduce ? .01 : 2.2;
+
+  for (let i = 0; i < N; i++) {
+    const p = P[i], [tx, ty, r, a, col] = target(i, proj);
+    const k = ease(Math.max(0, Math.min(1, (el - p.d * (reduce ? 0 : 1)) / dur)));
+    p.x = p.fx + (tx - p.fx) * k; p.y = p.fy + (ty - p.fy) * k;
+    const tw = .72 + .28 * Math.sin(now * 3 + p.tw);
+    p.ca = p.fa + (a - p.fa) * k;
+    if (mode === "cons" && i < SCORPIO.s.length && !reduce) {
+      // dim until its line arrives, then a bright flash that settles into a strong glow
+      const since = el - consLit[i];
+      const lit = since < 0 ? .45 : 1 + 1.6 * Math.exp(-since * 2.5);
+      glow(SPR.gold, p.x, p.y, r * (since < 0 ? 1 : 1.25 + .5 * Math.exp(-since * 2.5)), p.ca * lit * (since < 0 ? tw : .9 + .1 * tw));
+      if (since > 0) glow(SPR.white, p.x, p.y, r * .7, Math.min(1, .6 + Math.exp(-since * 3)));
+      continue;
+    }
+    glow(SPR[k < 1 ? "white" : col], p.x, p.y, r * (k < 1 ? .9 : 1), p.ca * tw);
+  }
+  fc.globalAlpha = 1;
+
+  // constellation lines
+  if (el > dur + .6) lineA = Math.min(1, lineA + dt * .9);
+  if (lineA > 0 && (mode === "cons" || mode === "cake")) {
+    fc.globalCompositeOperation = "source-over";
+    fc.lineWidth = 1;
+    if (mode === "cons") {
+      // drawn below, line by line
+    } else {
+      for (const [a, b] of cake.lines) {
+        const depth = 1 - Math.min(1, Math.max(0, ((proj[a].z + proj[b].z) / 2 + 1.3) / 2.6));
+        fc.strokeStyle = `rgba(233,230,245,${(.06 + .3 * depth) * lineA})`;
+        fc.beginPath(); fc.moveTo(P[a].x, P[a].y); fc.lineTo(P[b].x, P[b].y); fc.stroke();
+      }
+    }
+    fc.globalCompositeOperation = "lighter";
+  }
+
+  // Scorpio lines grow one after another with a soft glowing head
+  if (mode === "cons") {
+    fc.globalCompositeOperation = "lighter"; fc.lineCap = "round";
+    SCORPIO.l.forEach(([a, b], i) => {
+      const k = reduce ? 1 : Math.max(0, Math.min(1, (el - CONS_T0 - i * CONS_STEP) / CONS_LEN));
+      if (!k) return;
+      const e = 1 - Math.pow(1 - k, 3);
+      const x2 = P[a].x + (P[b].x - P[a].x) * e, y2 = P[a].y + (P[b].y - P[a].y) * e;
+      fc.globalAlpha = 1;
+      fc.strokeStyle = "rgba(241,217,167,.16)"; fc.lineWidth = 5;
+      fc.beginPath(); fc.moveTo(P[a].x, P[a].y); fc.lineTo(x2, y2); fc.stroke();
+      fc.strokeStyle = "rgba(255,244,220,.75)"; fc.lineWidth = 1.3;
+      fc.beginPath(); fc.moveTo(P[a].x, P[a].y); fc.lineTo(x2, y2); fc.stroke();
+      if (k < 1) glow(SPR.gold, x2, y2, 1.8, 1);
+    });
+    fc.globalAlpha = 1;
+  }
+
+  // candle flames
+  if (mode === "cake") {
+    if (flameOn && el > dur + .8) flame = Math.min(1, flame + dt * 1.5);
+    if (!flameOn) flame = Math.max(0, flame - dt * 5);
+    if (flame > .01) cake.candles.forEach((ci, n) => {
+      const p = P[ci], f = proj[ci].f;
+      const fl = 1 + .15 * Math.sin(now * 18 + n * 2) + .08 * Math.sin(now * 46 + n);
+      glow(SPR.flame, p.x, p.y - 6 * f, 2.6 * f * fl, flame * .9);
+      fc.globalAlpha = flame;
+      fc.fillStyle = "rgba(255,236,190,.95)";
+      const h = 13 * f * fl, w = 4.5 * f;
+      fc.beginPath(); fc.moveTo(p.x, p.y - h);
+      fc.quadraticCurveTo(p.x + w, p.y - h * .25, p.x, p.y);
+      fc.quadraticCurveTo(p.x - w, p.y - h * .25, p.x, p.y - h); fc.fill();
+    });
+  }
+  fc.globalAlpha = 1;
+
+  // each tap joins the new star to the one before it; after the last star the outline is drawn
+  if (joins.length || envStart >= 0) {
+    const pos = [...$("wstars").children].map(b => { const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+    const line = (a, b, k) => {
+      const [x1, y1] = pos[a], x = x1 + (pos[b][0] - x1) * k, y = y1 + (pos[b][1] - y1) * k;
+      fc.strokeStyle = "rgba(243,182,198,.18)"; fc.lineWidth = 5;
+      fc.beginPath(); fc.moveTo(x1, y1); fc.lineTo(x, y); fc.stroke();
+      fc.strokeStyle = "rgba(255,226,236,.85)"; fc.lineWidth = 1.3;
+      fc.beginPath(); fc.moveTo(x1, y1); fc.lineTo(x, y); fc.stroke();
+      return [x, y];
+    };
+    fc.globalCompositeOperation = "lighter"; fc.lineCap = "round";
+    for (const j of joins) {
+      const k = Math.min(1, (now - j.t) / .7), e = 1 - Math.pow(1 - k, 3);
+      const [x, y] = line(j.a, j.b, e);
+      if (k < 1) glow(SPR.rose, x, y, 1.8, 1);
+    }
+    if (envStart >= 0) {
+      ENV_PATH.forEach(([a, b], i) => {
+        const k = Math.min(1, Math.max(0, (now - envStart - i * .45) / .45)), e = 1 - Math.pow(1 - k, 3);
+        if (!e) return;
+        const [x, y] = line(a, b, e);
+        if (k < 1) glow(SPR.rose, x, y, 1.8, 1);
+      });
+    }
+    fc.globalAlpha = 1;
+  }
+
+  drawRipples(dt);
+  // smoke, sparks, meteors, wish stars
+  fc.globalCompositeOperation = "source-over";
+  for (let i = smoke.length - 1; i >= 0; i--) {
+    const s = smoke[i]; s.life += dt;
+    if (s.life < 0) continue;
+    s.x += Math.sin(s.life * 3 + i) * 8 * dt; s.y -= 32 * dt;
+    fc.fillStyle = `rgba(200,205,225,${.22 * (1 - s.life / 1.6)})`;
+    fc.beginPath(); fc.arc(s.x, s.y, 2 + s.life * 4, 0, Math.PI * 2); fc.fill();
+    if (s.life > 1.6) smoke.splice(i, 1);
+  }
+  fc.globalCompositeOperation = "lighter";
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i]; s.life += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 70 * dt; s.vx *= 1 - dt * .9; s.vy *= 1 - dt * .9;
+    glow(SPR[s.c], s.x, s.y, 1.4, 1 - s.life / s.max);
+    if (s.life > s.max) sparks.splice(i, 1);
+  }
+  fc.globalAlpha = 1;
+  if (!reduce && Math.random() < dt * (showerUntil > now ? 14 : .9)) meteor();
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const m = meteors[i]; m.life += dt; m.x += m.vx * dt; m.y += m.vy * dt;
+    const k = 1 - m.life / m.max, tx = m.x - m.vx * .22, ty = m.y - m.vy * .22;
+    const g = fc.createLinearGradient(m.x, m.y, tx, ty);
+    g.addColorStop(0, `rgba(255,255,255,${.85 * k})`); g.addColorStop(1, "rgba(255,255,255,0)");
+    fc.strokeStyle = g; fc.lineWidth = 1.5; fc.lineCap = "round";
+    fc.beginPath(); fc.moveTo(m.x, m.y); fc.lineTo(tx, ty); fc.stroke();
+    if (m.life > m.max) meteors.splice(i, 1);
+  }
+  for (const w of wishes) {
+    if (!w.arrived) {
+      w.k = Math.min(1, (w.k || 0) + dt / 3);
+      const e = ease(w.k);
+      w.x = w.sx + (w.tx - w.sx) * e; w.y = w.sy + (w.ty - w.sy) * e - Math.sin(e * Math.PI) * 40;
+      moveWish(w.x, w.y);
+      if (w.k >= 1) { w.arrived = true; burst(w.x, w.y, 70); wishArrived(w); }
+    }
+    glow(SPR.gold, w.x, w.y, 2.4 + .4 * Math.sin(now * 2.5), 1);
+  }
+  fc.globalAlpha = 1;
+  fc.globalCompositeOperation = "source-over";
+  requestAnimationFrame(frame);
+}
+let showerUntil = 0, heartFade = 0;
+requestAnimationFrame(t => { last = t; frame(t); });
+
+// ---------- story ----------
+let act = 0, timers = [];
+const later = (fn, ms) => timers.push(setTimeout(fn, reduce ? Math.min(ms, 50) : ms));
+function show(id, on) { $(id).classList.toggle("out", !on); }
+function panel(n) { for (let i = 0; i <= 6; i++) show("s" + i, i === n); act = n; }
+function type(el, text, speed = 38, done) {
+  el.textContent = ""; let i = 0; el.classList.add("caret");
+  clearInterval(el._t);
+  el._t = setInterval(() => {
+    i += reduce ? text.length : 1; el.textContent = text.slice(0, i);
+    if (i >= text.length) { clearInterval(el._t); el.classList.remove("caret"); done && done(); }
+  }, speed);
+  el._finish = () => { i = text.length - 1; };
+}
+
+const PENTA = [67, 69, 72, 74, 76, 79, 81, 84, 86, 88];
+function act1() {
+  panel(1); morph("cons", 0);
+  const name = $("s1").querySelector(".name");
+  name.classList.remove("on"); $("b1").classList.remove("on");
+  // each constellation line lands on its own note
+  SCORPIO.l.forEach((_, i) => later(() => { if (ac) bell(hz(PENTA[i]), ac.currentTime, .8, .1); }, (CONS_T0 + i * CONS_STEP + CONS_LEN) * 1000));
+  const drawEnd = CONS_T0 + SCORPIO.l.length * CONS_STEP + CONS_LEN;
+  later(() => name.classList.add("on"), drawEnd * 1000);
+  later(() => type($("l1"), CONFIG.intro, 60, () => $("b1").classList.add("on")), (drawEnd + 1) * 1000);
+}
+function act2() {
+  panel(2); morph("cake", .7); flameOn = true;
+  $("topText").textContent = `Happy Birthday, ${CONFIG.name}`;
+  $("h2").textContent = "Kéo để xoay chiếc bánh";
+
+  // the title waits until the cake has formed
+  later(() => show("topTitle", true), 2200);
+  later(loopMusic, 2600);
+  $("l2").textContent = "";
+  later(() => type($("l2"), CONFIG.afterBlow, 42), 3000);
+}
+function blow() {
+  if (act !== 2) return;
+  stopMic();
+  flameOn = false; act = 3; show("s2", false);
+  cake.candles.forEach(ci => {
+    for (let k = 0; k < 10; k++) smoke.push({ x: P[ci].x + (Math.random() - .5) * 4, y: P[ci].y - 4, life: -k * .08 });
+  });
+  showerUntil = now + 4;
+  later(() => burst(W * .25, H * .25), 500);
+  later(() => burst(W * .75, H * .2), 900);
+  later(() => burst(W * .5, H * .15, 80), 1300);
+  later(() => { morph("heart", .5); chime(3); }, 1700);
+  later(() => { morph("text", .5); chime(3); }, 5200);
+  later(() => { panel(3); $("l3").textContent = ""; type($("l3"), CONFIG.afterBlow, 45); }, 6600);
+}
+
+// microphone: blow on the phone to put out the candles
+let micStream = null;
+async function useMic() {
+  initAudio();
+  $("h2").textContent = "Đang mở micro...";
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const src = ac.createMediaStreamSource(micStream), an = ac.createAnalyser();
+    an.fftSize = 512; src.connect(an);
+    const buf = new Uint8Array(an.fftSize); let loud = 0;
+    $("h2").textContent = "Thổi thật mạnh vào micro nào";
+    $("mic").hidden = true;
+    const listen = () => {
+      if (!micStream) return;
+      an.getByteTimeDomainData(buf);
+      let s = 0; for (const v of buf) { const x = (v - 128) / 128; s += x * x; }
+      loud = Math.sqrt(s / buf.length) > .16 ? loud + 1 : Math.max(0, loud - 1);
+      if (loud > 8) blow(); else requestAnimationFrame(listen);
+    };
+    listen();
+  } catch (e) {
+    $("h2").textContent = "Không mở được micro, bấm Thổi nến nhé.";
+    $("mic").hidden = true;
+  }
+}
+function stopMic() { if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; } }
+
+// talking stars
+// Seven points of a heart, in screen percent, from the left lobe round to the right
+// Seven stars sit on an envelope, in reading order: walk the outline clockwise, flap tip last
+const SPOTS = [[-1, -.62], [1, -.62], [1, 0], [1, .62], [-1, .62], [-1, 0], [0, .1]];
+// before the envelope, the stars are scattered, so each tap order draws its own figure
+const SCATTER = [[-.9, -.8], [.8, -.9], [-.2, -.3], [.9, .05], [-.7, .35], [.3, .75], [-.4, .95]];
+const ENV_Y = .4; // height of the envelope, as a share of the screen
+const boxE = () => Math.min(W * .4, H * .24, 260);
+let envelopeLayout = false;
+function layoutStars() {
+  const E = boxE(), spots = envelopeLayout ? SPOTS : SCATTER;
+  [...$("wstars").children].forEach((b, i) => {
+    const [x, y] = spots[i];
+    b.style.left = (W / 2 + x * E) + "px"; b.style.top = (H * ENV_Y + y * E) + "px";
+  });
+}
+addEventListener("resize", () => layoutStars());
+let read = new Set();
+let envReady = false, opening = false;
+let joins = [], lastRead = -1, envStart = -1;
+// the envelope outline is drawn as one path, following the stars in this order
+const ENV_PATH = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 6], [6, 1]];
+function act4() {
+  panel(4); morph("sky", 1.2); show("topTitle", false);
+  read = new Set(); envReady = false; $("b4").hidden = true; shapeScale = .42; envelopeLayout = false;
+  joins = []; lastRead = -1; envStart = -1;
+  $("count").textContent = "0 / 7";
+  $("card").textContent = "Chạm vào những ngôi sao vàng. Mỗi ngôi sao giữ một điều nhỏ.";
+  const box = $("wstars"); box.innerHTML = "";
+  CONFIG.stars.slice(0, 7).forEach((star, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "wstar fade out";
+    b.setAttribute("aria-label", `Ngôi sao ${i + 1}`);
+    b.addEventListener("click", e => {
+      e.stopPropagation();
+      if (envReady) { openEnvelope(); return; }
+      if (read.has(i)) return;
+      // the message follows the reading order, not the star tapped
+      const msg = CONFIG.stars[read.size];
+      if (lastRead >= 0) joins.push({ a: lastRead, b: i, t: now });
+      lastRead = i;
+      b.classList.add("read"); read.add(i);
+      document.querySelectorAll(".wstar").forEach(o => o.classList.toggle("now", o === b));
+      $("count").textContent = `${read.size} / 7`;
+      playNotes([60, 64, 67, 71, 72, 76, 79].map(m => m + (read.size % 2 ? 2 : 0)).slice(0, 3 + (read.size % 3)).map(m => m + read.size));
+      setCard(msg.title, msg.text, msg.note);
+      if (read.size === 7) later(finishEnvelope, 2800);
+    });
+    box.appendChild(b);
+    later(() => b.classList.remove("out"), 900 + i * 220);
+  });
+  layoutStars();
+}
+function finishEnvelope() {
+  if (act !== 4) return;
+  joins = [];
+  // the stars slide onto the envelope outline first, then the outline is drawn through them
+  envelopeLayout = true; layoutStars();
+  envStart = now + 1;
+  shapeScale = 1; buildShape("envelope"); morph("shape", .8);
+  document.querySelectorAll(".wstar").forEach(o => o.classList.remove("now"));
+  [...$("wstars").children].forEach((b, k) => later(() => { const r = b.getBoundingClientRect(); burst(r.left + 24, r.top + 24, 20); }, 1000 + k * 120));
+  playNotes([67, 67, 69, 67, 72, 71]);
+  setCard("📩 Thư đến", CONFIG.starsDone);
+  later(() => { envReady = true; $("b4").hidden = false; }, 1200);
+}
+function openEnvelope() {
+  if (act !== 4 || !envReady || opening) return;
+  opening = true; initAudio();
+  show("s4", false); hideStars();
+  joins = []; envStart = -1;
+  shapeScale = 1; buildShape("envelopeOpen"); morph("shape", .15);
+  playNotes([72, 76, 79, 84]);
+  later(() => burst(W / 2, H * .4, 90), 500);
+  later(() => { opening = false; act5(); }, 1500);
+}
+function setCard(title, text, note) {
+  const c = $("card"); c.style.opacity = 0;
+  setTimeout(() => {
+    c.innerHTML = "";
+    const wrap = document.createElement("div");
+    if (title) { const h = document.createElement("div"); h.className = "ctitle"; h.textContent = title; wrap.appendChild(h); }
+    const t = document.createElement("div"); t.textContent = text; wrap.appendChild(t);
+    if (note) { const n = document.createElement("div"); n.className = "cnote"; n.textContent = note; wrap.appendChild(n); }
+    c.appendChild(wrap); c.style.opacity = 1;
+    // the card rises in and the lines settle one after another
+    const rise = [{ opacity: 0, transform: "translateY(14px) scale(.96)", filter: "blur(6px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }];
+    wrap.animate(rise, { duration: 560, easing: "cubic-bezier(.2,.8,.2,1)" });
+    [...wrap.children].slice(1).forEach((el, k) => el.animate(rise, { duration: 520, delay: 140 + k * 140, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both" }));
+  }, 180);
+}
+function playNotes(ms) { if (!ac) return; ms.forEach((m, k) => bell(hz(m), ac.currentTime + k * .12, .5, .12)); }
+function hideStars() { $("wstars").querySelectorAll(".wstar").forEach(b => b.classList.add("out")); }
+
+function act5() {
+  hideStars(); panel(5); morph("heart", 1);
+  $("b5").hidden = true;
+  $("to").textContent = CONFIG.letterTo; $("sign").textContent = "";
+  $("letter").scrollTop = 0;
+  later(() => type($("letterBody"), CONFIG.letter, 32, () => {
+    $("sign").textContent = "— " + CONFIG.from; $("b5").hidden = false;
+  }), 900);
+}
+$("wishInput").addEventListener("input", e => e.target.setCustomValidity(""));
+function act6() {
+  // the screen goes dark first, then the wish form comes up in the dark
+  $("dim").classList.add("on");
+  document.body.classList.add("dark");
+  later(() => {
+    panel(6); morph("sky", 1);
+    $("l6").textContent = "Viết ra đây, nó sẽ thành một ngôi sao trên bầu trời này.";
+    $("wishForm").hidden = false; $("again").hidden = true; $("wishInput").value = "";
+    $("dim").classList.remove("on");
+  }, 1000);
+}
+// Keep the wish on the server when deployed; on the artifact the request just fails quietly
+function saveWish(text) {
+  if (!text) return;
+  fetch("/api/wish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) }).catch(() => {});
+}
+// the artifact frame blocks native form submits, so the button and Enter both call this directly
+function sendWish() {
+  const input = $("wishInput"), r = input.getBoundingClientRect();
+  // a wish must have words before the sky can wake
+  if (!input.value.trim()) { input.setCustomValidity("Viết đi"); input.reportValidity(); return; }
+  saveWish(input.value.trim().slice(0, 80));
+  input.blur();
+  // the screen stays dark until the wish star bursts
+  const w = { sx: r.left + r.width / 2, sy: r.top, tx: W * (.15 + Math.random() * .7), ty: H * (.1 + Math.random() * .25), arrived: false };
+  w.x = w.sx; w.y = w.sy; wishes.push(w);
+  $("spot").classList.add("on"); $("flyer").classList.add("on"); moveWish(w.x, w.y);
+  try { localStorage.setItem("trang-wishes", JSON.stringify(wishes.map(v => [v.tx ?? v.x, v.ty ?? v.y]))); } catch (err) {}
+  chime(5);
+  $("wishForm").hidden = true;
+  $("l6").textContent = "";
+  type($("l6"), CONFIG.ending, 40);
+}
+$("wishForm").addEventListener("submit", e => { e.preventDefault(); sendWish(); });
+$("wishForm").querySelector("button").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); sendWish(); });
+$("wishInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendWish(); } });
+// moves the light pool and the flying star together
+function moveWish(x, y) {
+  const s = $("spot"), f = $("flyer");
+  s.style.setProperty("--x", x + "px"); s.style.setProperty("--y", y + "px");
+  f.style.transform = `translate(${x - 5}px, ${y - 5}px)`;
+}
+// the sky opens up gradually, from the spot where the wish star exploded
+function burstReveal(x, y) {
+  const root = document.documentElement.style, max = Math.hypot(W, H) + 90, t0 = performance.now(), dur = 2600;
+  root.setProperty("--bx", x + "px"); root.setProperty("--by", y + "px"); root.setProperty("--rr", "0px");
+  const step = t => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    root.setProperty("--rr", (max * e) + "px");
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function wishArrived(w) {
+  if (act !== 6) return;
+  // the sky bursts to full brightness in one flash, not a slow fade
+  magicTarget = 1; magic = 1; showerUntil = now + 3;
+  document.body.classList.remove("dark");
+  $("spot").classList.remove("on"); $("flyer").classList.remove("on");
+  burstReveal(w.x, w.y);
+  wakeT = now; wakeX = w.x; wakeY = w.y;
+  ripples.push({ x: w.x, y: w.y, life: 0, rgb: "241,217,167" });
+  later(() => ripples.push({ x: w.x, y: w.y, life: 0, rgb: "243,182,198" }), 350);
+  later(() => ripples.push({ x: w.x, y: w.y, life: 0, rgb: "150,200,255" }), 700);
+  playNotes([60, 64, 67, 72, 76, 79, 84]);
+  later(() => { $("l6").textContent = ""; type($("l6"), "Bầu trời đã nghe thấy điều ước của Chang.", 40); }, 900);
+  later(act2, 4200);
+}
+
+function restart() {
+  timers.forEach(clearTimeout); timers = []; stopMic(); clearTimeout(musicTimer);
+  hideStars(); show("topTitle", false); flame = 0; flameOn = false; magicTarget = 0; wakeT = -1; skyTurn = 0; joins = []; envStart = -1;
+  document.body.classList.remove("dark");
+  $("spot").classList.remove("on"); $("flyer").classList.remove("on");
+  act1();
+}
+
+$("b1").addEventListener("click", e => { e.stopPropagation(); act4(); });
+$("b4").addEventListener("click", e => { e.stopPropagation(); openEnvelope(); });
+$("b5").addEventListener("click", e => { e.stopPropagation(); act6(); });
+$("again").addEventListener("click", e => { e.stopPropagation(); restart(); });
+document.querySelectorAll(".panel button, .panel input, .letter").forEach(el => el.addEventListener("pointerdown", e => e.stopPropagation()));
+
+// tap anywhere: open on the lock screen, otherwise a shooting star; drag spins the cake
+let downX = 0, lastX = 0, moved = 0;
+fx.addEventListener("pointerdown", e => { dragging = true; downX = lastX = e.clientX; moved = 0; try { fx.setPointerCapture(e.pointerId); } catch (_) {} });
+fx.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
+  if (mode === "cake") { rotY += dx * .01; rotV = dx * .6; }
+});
+fx.addEventListener("pointerup", e => {
+  dragging = false;
+  if (moved > 8) return;
+  if (act === 0) { initAudio(); chime(4); act1(); return; }
+  if (act === 4) { openEnvelope(); return; }
+  initAudio(); chime(1);
+  if (!reduce) meteor(e.clientX, e.clientY);
+});
+fx.addEventListener("pointercancel", () => { dragging = false; });
+$("s0").addEventListener("click", () => { if (act === 0) { initAudio(); chime(4); act1(); } });
+addEventListener("keydown", e => { if (act === 0 && (e.key === "Enter" || e.key === " ")) { initAudio(); act1(); } });
+</script>
+</body>
+</html>
