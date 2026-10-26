@@ -1035,8 +1035,8 @@ function sendWish() {
   later(() => { $("spot").classList.add("on"); $("flyer").classList.add("on"); chime(5); }, 650);
   later(() => wishes.push(w), 1100);
   try { localStorage.setItem("trang-wishes", JSON.stringify([...wishes, w].map(v => [v.tx ?? v.x, v.ty ?? v.y]))); } catch (err) {}
+  // no caption while the letters gather and the star flies, so nothing covers them
   $("l6").textContent = "";
-  type($("l6"), CONFIG.ending, 40);
 }
 $("wishForm").addEventListener("submit", e => { e.preventDefault(); sendWish(); });
 $("wishForm").querySelector("button").addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); sendWish(); });
