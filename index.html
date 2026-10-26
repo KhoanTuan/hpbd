@@ -557,7 +557,7 @@ function burst(x, y, n = 60) {
   }
   chime(4);
 }
-try { JSON.parse(localStorage.getItem("trang-wishes") || "[]").forEach(w => wishes.push({ x: w[0], y: w[1], arrived: true })); } catch (e) {}
+try { JSON.parse(localStorage.getItem("trang-wishes") || "[]").forEach(w => wishes.push({ x: w[0], y: w[1], arrived: true, old: true })); } catch (e) {}
 
 // ---------- sound: a music box Happy Birthday made with Web Audio ----------
 let ac = null, master = null, soundOn = true;
@@ -803,6 +803,8 @@ function frame(ts) {
       moveWish(w.x, w.y);
       if (w.k >= 1) { w.arrived = true; burst(w.x, w.y, 70); wishArrived(w); }
     }
+    // wishes from earlier visits only shine once tonight's wish has woken the sky
+    if (w.old && wakeT < 0) continue;
     glow(SPR.gold, w.x, w.y, 2.4 + .4 * Math.sin(now * 2.5), 1);
   }
   fc.globalAlpha = 1;
