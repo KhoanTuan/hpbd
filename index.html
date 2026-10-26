@@ -1009,7 +1009,7 @@ function act6() {
   later(() => {
     panel(6); morph("sky", 1);
     $("l6").textContent = "Viết ra đây, nó sẽ thành một ngôi sao trên bầu trời này.";
-    $("wishForm").hidden = false; $("again").hidden = true; $("wishInput").value = "";
+    $("wishForm").hidden = false; $("again").hidden = true; $("wishInput").value = ""; $("wishInput").readOnly = false;
     $("dim").classList.remove("on");
   }, 1000);
 }
@@ -1020,13 +1020,25 @@ function saveWish(text) {
 }
 // the artifact frame blocks native form submits, so the button and Enter both call this directly
 function sendWish() {
-  const input = $("wishInput"), r = input.getBoundingClientRect();
+  const input = $("wishInput");
+  if (input.readOnly) return;
   // a wish must have words before the sky can wake
   if (!input.value.trim()) { input.setCustomValidity("Viết đi"); input.reportValidity(); return; }
   saveWish(input.value.trim().slice(0, 80));
-  // the written words pull together into one point of light where they were typed, then that light rises
-  const pt = gatherLetters(input, r);
+  // on iPhone the keyboard is still up here and the page is shifted, so wait for it to close
+  // and the form to settle back at the bottom before measuring where the letters are
+  const typing = document.activeElement === input;
+  input.readOnly = true;
   input.blur();
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    if (act !== 6) return;
+    launchWish(input);
+  }, typing ? 450 : 0);
+}
+function launchWish(input) {
+  // the written words pull together into one point of light where they were typed, then that light rises
+  const pt = gatherLetters(input, input.getBoundingClientRect());
   $("wishForm").hidden = true;
   // the screen stays dark until the wish star bursts
   const w = { sx: pt.x, sy: pt.y, tx: W * (.15 + Math.random() * .7), ty: H * (.1 + Math.random() * .25), arrived: false };
